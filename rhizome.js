@@ -2,6 +2,9 @@ var svg = d3.select("svg"),
     width = +svg.attr("width"),
     height = +svg.attr("height");
 
+// horrible globvar but will do until the inevitable refactoring...
+var links = null;
+
 // var color = d3.scaleOrdinal(d3.schemeCategory10);
 function color(type) {
   switch (type) {
@@ -45,7 +48,7 @@ d3.json("rhizome-json.php", function(error, graph) {
   var memberLinks = graph.links.memberOf;
   var alumLinks = graph.links.alumOf;
 
-  var links = d3.merge([memberLinks, alumLinks]);
+  links = d3.merge([memberLinks, alumLinks]);
 
   var link = svg.append("g")
       .attr("class", "links")
@@ -71,32 +74,37 @@ d3.json("rhizome-json.php", function(error, graph) {
       .attr("fill", function(d) { 
         return color(d.type);
       })
+      .attr('id', function(d){
+              return 'node-'+d.id;
+            })
       .on("mouseover", handleMouseOver)
       .call(d3.drag()
         .on("start", dragstarted)
         .on("drag", dragged)
         .on("end", dragended)
       );
-      // .append("text").text("test");
 
-    var nodeText = svg.selectAll(".node")
-      .append("text")
-      .data(graph.nodes)
-      .text(function(d) {
-        return d.name;
-      })
-      .attr("x", function(d) {
-        return (d.x); })
-      .attr("y", function(d) {
-        return (d.y); })
-      .attr("dy", ".25em")
-      .attr("text-anchor", "middle")
-      .on("mouseover", handleMouseOver)
-      .call(d3.drag()
-        .on("start", dragstarted)
-        .on("drag", dragged)
-        .on("end", dragended)
-      );
+  var nodeText = svg.selectAll(".node")
+    .append("text")
+    .data(graph.nodes)
+    .text(function(d) {
+      return d.name;
+    })
+    .attr("x", function(d) {
+      return (d.x); })
+    .attr("y", function(d) {
+      return (d.y); })
+    .attr("dy", ".25em")
+    .attr("text-anchor", "middle")
+    .attr('id', function(d){
+            return 'text-'+d.id;
+          })
+    .on("mouseover", handleMouseOver)
+    .call(d3.drag()
+      .on("start", dragstarted)
+      .on("drag", dragged)
+      .on("end", dragended)
+    );
 
   node.append("title")
       .text(function(d) { return d.id; });
@@ -169,4 +177,44 @@ function handleMouseOver(d) {
   list.append('li').text(d.name);
   
   list.append('li').append('a').attr('href', d.url).text(d.url);
+}
+
+function allNodesOpacity(fill_opacity = 1) {
+  d3.selectAll('circle').style('fill-opacity', fill_opacity);
+  d3.selectAll('text').style('fill-opacity', fill_opacity);
+}
+
+function idNodeOpacity(id, fill_opacity = 1) {
+  d3.selectAll('#node-'+id).style('fill-opacity', fill_opacity);
+  d3.selectAll('#text-'+id).style('fill-opacity', fill_opacity);
+}
+
+function highlightNode(target_id) {
+  // make all nodes nearly transparent
+  allNodesOpacity(0.2);
+
+  var second_degree_nodes = [];
+
+  links.filter(function(d) {
+    return ((d.source.id == target_id) || (d.target.id == target_id));
+  }).forEach(function(d){
+    if (d.source.type == "group") {
+      second_degree_nodes.push(d.source.id);
+    }
+    if (d.target.type == "group") {
+      second_degree_nodes.push(d.target.id);
+    }
+    idNodeOpacity(d.source.id);
+    idNodeOpacity(d.target.id);
+  });
+
+  second_degree_nodes.forEach(function(n){
+    console.log('node',n);
+    links.filter(function(d) {
+      return ((d.source.id == n) || (d.target.id == n));
+    }).forEach(function(d){
+      idNodeOpacity(d.source.id);
+      idNodeOpacity(d.target.id);
+    });
+  });
 }
