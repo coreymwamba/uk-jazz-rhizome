@@ -205,9 +205,23 @@ function idNodeOpacity(id, fill_opacity = 1) {
   d3.selectAll('#text-'+id).style('fill-opacity', fill_opacity);
 }
 
+function resetZoomWholeGraph() {
+  zoom.scaleTo(g, 0.1);
+  zoom.translateTo(g, width/2, height/2);
+}
+
 function highlightNode(target_id) {
   // make all nodes nearly transparent
   allNodesOpacity(0.2);
+
+  d3.selectAll('g.node')
+    .each(function(d){
+      if(d.id == target_id) {
+        // zoom to this node
+        zoom.scaleTo(g, 1.5);
+        zoom.translateTo(g, d.x, d.y);
+      }
+    })
 
   var second_degree_nodes = [];
 
