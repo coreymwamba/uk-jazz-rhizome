@@ -41,7 +41,17 @@ var simulation = d3.forceSimulation()
     .force("charge", d3.forceManyBody().strength(-50.5))
     .force("center", d3.forceCenter(width / 2, height / 2))
 
-
+// g acts as a container for all our SVG, allowing us to zoom it all at once
+var g = svg.append("g");
+var node = null;
+var min_zoom = 0.1;
+var max_zoom = 6;
+var zoom = 
+  d3.zoom().scaleExtent([min_zoom,max_zoom])
+  .on("zoom", function (d) {
+  	g.attr("transform", "translate(" + d3.event.transform.x + "," +
+          d3.event.transform.y + ")scale(" + d3.event.transform.k + ")");
+  });
 
 d3.json("rhizome-json.php", function(error, graph) {
   if (error) throw error;
@@ -50,7 +60,7 @@ d3.json("rhizome-json.php", function(error, graph) {
 
   links = d3.merge([memberLinks, alumLinks]);
 
-  var link = svg.append("g")
+  var link = g.append("g")
       .attr("class", "links")
     .selectAll("line")
     .data(links)
@@ -60,7 +70,7 @@ d3.json("rhizome-json.php", function(error, graph) {
         if(d.type=="alum") return ("3, 3");
       });
 
-  var node = svg.append("g")
+  node = g.append("g")
       .attr("class", "nodes")
     .selectAll("circle")
     .data(graph.nodes)
@@ -84,7 +94,7 @@ d3.json("rhizome-json.php", function(error, graph) {
         .on("end", dragended)
       );
 
-  var nodeText = svg.selectAll(".node")
+  var nodeText = g.selectAll(".node")
     .append("text")
     .data(graph.nodes)
     .text(function(d) {
@@ -110,15 +120,16 @@ d3.json("rhizome-json.php", function(error, graph) {
       .text(function(d) { return d.id; });
 
   simulation
-      .nodes(graph.nodes)
-      .on("tick", ticked);
+    .nodes(graph.nodes)
+    .on("tick", ticked);
 
-  simulation.force("link")
-      .links(links);
+  simulation.force("link").links(links);
+
+  svg.call(zoom);
 
  function ticked() {
-    var svg_width = 1000;
-    var svg_height = 1000;
+    var svg_width = 10000;
+    var svg_height = 10000;
 
     node
         .attr("cx", function(d) { 
