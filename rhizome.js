@@ -1,6 +1,9 @@
-var svg = d3.select("svg"),
-    width = +svg.attr("width"),
-    height = +svg.attr("height");
+var svg = d3.select("svg");
+    // width = +svg.attr("width"),
+    // height = +svg.attr("height");
+var width = 5000;
+var height = 5000;
+
 
 // horrible globvar but will do until the inevitable refactoring...
 var links = null;
@@ -46,10 +49,10 @@ var g = svg.append("g");
 var node = null;
 var min_zoom = 0.1;
 var max_zoom = 6;
-var zoom = 
+var zoom =
   d3.zoom().scaleExtent([min_zoom,max_zoom])
   .on("zoom", function (d) {
-  	g.attr("transform", "translate(" + d3.event.transform.x + "," +
+    g.attr("transform", "translate(" + d3.event.transform.x + "," +
           d3.event.transform.y + ")scale(" + d3.event.transform.k + ")");
   });
 
@@ -126,29 +129,30 @@ d3.json("rhizome-json.php", function(error, graph) {
   simulation.force("link").links(links);
 
   svg.call(zoom);
+  
+  // manually zoom so we can see the whole graph
+  zoom.scaleTo(g, 0.1);
 
  function ticked() {
-    var svg_width = 10000;
-    var svg_height = 10000;
 
     node
         .attr("cx", function(d) { 
           radius = size(d.type);
-          return d.x = Math.max(radius, Math.min(svg_width - radius, d.x)); 
+          return d.x = Math.max(radius, Math.min(width - radius, d.x)); 
          })
         .attr("cy", function(d) { 
           radius = size(d.type);
-          return d.y = Math.max(radius, Math.min(svg_height - radius, d.y)); 
+          return d.y = Math.max(radius, Math.min(height - radius, d.y)); 
         });
 
     nodeText
         .attr("x", function(d) { 
           radius = size(d.type);
-          return d.x = Math.max(radius, Math.min(svg_width - radius, d.x)); 
+          return d.x = Math.max(radius, Math.min(width - radius, d.x)); 
          })
         .attr("y", function(d) { 
           radius = size(d.type);
-          return d.y = Math.max(radius, Math.min(svg_height - radius, d.y)); 
+          return d.y = Math.max(radius, Math.min(height - radius, d.y)); 
         });
 
     link
