@@ -132,6 +132,7 @@ d3.json("rhizome-json.php", function(error, graph) {
   
   // manually zoom so we can see the whole graph
   zoom.scaleTo(g, 0.1);
+  zoom.translateTo(g, 2500, 2500);
 
  function ticked() {
 
