@@ -34,7 +34,15 @@ function size(type) {
     return "18";
   }
 }
-
+function rad(type) {
+  switch (type) {
+  case "person":
+    return "15";
+    break;
+  default:
+    return "22";
+  }
+}
 function title(str) {
   return str.replace(/\b\S/g, function(t) { return t.toUpperCase() });
 }
@@ -43,6 +51,9 @@ var simulation = d3.forceSimulation()
     .force("link", d3.forceLink().id(function(d) { return d.id; }).distance(50).iterations(5))
     .force("charge", d3.forceManyBody().strength(-50.5))
     .force("center", d3.forceCenter(width / 2, height / 2))
+    .force('collision', d3.forceCollide().radius(function(d) {
+    return rad(d.type)
+  }))
 
 // g acts as a container for all our SVG, allowing us to zoom it all at once
 var g = svg.append("g");
