@@ -1,6 +1,9 @@
-var svg = d3.select("svg"),
-    width = +svg.attr("width"),
-    height = +svg.attr("height");
+var svg = d3.select("svg");
+    // width = +svg.attr("width"),
+    // height = +svg.attr("height");
+var width = 5000;
+var height = 5000;
+
 
 // horrible globvar but will do until the inevitable refactoring...
 var links = null;
@@ -41,7 +44,17 @@ var simulation = d3.forceSimulation()
     .force("charge", d3.forceManyBody().strength(-50.5))
     .force("center", d3.forceCenter(width / 2, height / 2))
 
-
+// g acts as a container for all our SVG, allowing us to zoom it all at once
+var g = svg.append("g");
+var node = null;
+var min_zoom = 0.1;
+var max_zoom = 6;
+var zoom =
+  d3.zoom().scaleExtent([min_zoom,max_zoom])
+  .on("zoom", function (d) {
+    g.attr("transform", "translate(" + d3.event.transform.x + "," +
+          d3.event.transform.y + ")scale(" + d3.event.transform.k + ")");
+  });
 
 d3.json("rhizome-json.php", function(error, graph) {
   if (error) throw error;
@@ -50,7 +63,7 @@ d3.json("rhizome-json.php", function(error, graph) {
 
   links = d3.merge([memberLinks, alumLinks]);
 
-  var link = svg.append("g")
+  var link = g.append("g")
       .attr("class", "links")
     .selectAll("line")
     .data(links)
@@ -60,7 +73,7 @@ d3.json("rhizome-json.php", function(error, graph) {
         if(d.type=="alum") return ("3, 3");
       });
 
-  var node = svg.append("g")
+  node = g.append("g")
       .attr("class", "nodes")
     .selectAll("circle")
     .data(graph.nodes)
@@ -84,7 +97,7 @@ d3.json("rhizome-json.php", function(error, graph) {
         .on("end", dragended)
       );
 
-  var nodeText = svg.selectAll(".node")
+  var nodeText = g.selectAll(".node")
     .append("text")
     .data(graph.nodes)
     .text(function(d) {
@@ -110,34 +123,37 @@ d3.json("rhizome-json.php", function(error, graph) {
       .text(function(d) { return d.id; });
 
   simulation
-      .nodes(graph.nodes)
-      .on("tick", ticked);
+    .nodes(graph.nodes)
+    .on("tick", ticked);
 
-  simulation.force("link")
-      .links(links);
+  simulation.force("link").links(links);
+
+  svg.call(zoom);
+  
+  // manually zoom so we can see the whole graph
+  zoom.scaleTo(g, 0.1);
+  zoom.translateTo(g, 2500, 2500);
 
  function ticked() {
-    var svg_width = 1000;
-    var svg_height = 1000;
 
     node
         .attr("cx", function(d) { 
           radius = size(d.type);
-          return d.x = Math.max(radius, Math.min(svg_width - radius, d.x)); 
+          return d.x = Math.max(radius, Math.min(width - radius, d.x)); 
          })
         .attr("cy", function(d) { 
           radius = size(d.type);
-          return d.y = Math.max(radius, Math.min(svg_height - radius, d.y)); 
+          return d.y = Math.max(radius, Math.min(height - radius, d.y)); 
         });
 
     nodeText
         .attr("x", function(d) { 
           radius = size(d.type);
-          return d.x = Math.max(radius, Math.min(svg_width - radius, d.x)); 
+          return d.x = Math.max(radius, Math.min(width - radius, d.x)); 
          })
         .attr("y", function(d) { 
           radius = size(d.type);
-          return d.y = Math.max(radius, Math.min(svg_height - radius, d.y)); 
+          return d.y = Math.max(radius, Math.min(height - radius, d.y)); 
         });
 
     link
@@ -189,9 +205,23 @@ function idNodeOpacity(id, fill_opacity = 1) {
   d3.selectAll('#text-'+id).style('fill-opacity', fill_opacity);
 }
 
+function resetZoomWholeGraph() {
+  zoom.scaleTo(g, 0.1);
+  zoom.translateTo(g, width/2, height/2);
+}
+
 function highlightNode(target_id) {
   // make all nodes nearly transparent
   allNodesOpacity(0.2);
+
+  d3.selectAll('g.node')
+    .each(function(d){
+      if(d.id == target_id) {
+        // zoom to this node
+        zoom.scaleTo(g, 1.5);
+        zoom.translateTo(g, d.x, d.y);
+      }
+    })
 
   var second_degree_nodes = [];
 
