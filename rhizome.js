@@ -3,7 +3,7 @@ var svg = d3.select("svg");
     // height = +svg.attr("height");
 var width = 5000;
 var height = 5000;
-
+var dataQuery = svg.attr("data-query");
 
 // horrible globvar but will do until the inevitable refactoring...
 var links = null;
@@ -37,19 +37,20 @@ function size(type) {
 function rad(type) {
   switch (type) {
   case "person":
-    return "15";
+    return "40";
     break;
   default:
-    return "22";
+    return "50";
   }
 }
+
 function title(str) {
   return str.replace(/\b\S/g, function(t) { return t.toUpperCase() });
 }
 
 var simulation = d3.forceSimulation()
     .force("link", d3.forceLink().id(function(d) { return d.id; }).distance(50).iterations(5))
-    .force("charge", d3.forceManyBody().strength(-50.5))
+    .force("charge", d3.forceManyBody().strength(-25))
     .force("center", d3.forceCenter(width / 2, height / 2))
     .force('collision', d3.forceCollide().radius(function(d) {
     return rad(d.type)
@@ -67,7 +68,9 @@ var zoom =
           d3.event.transform.y + ")scale(" + d3.event.transform.k + ")");
   });
 
-d3.json("rhizome-json.php", function(error, graph) {
+var jsonPull = "rhizome-json.php?"+dataQuery;
+
+d3.json(jsonPull, function(error, graph) {
   if (error) throw error;
   var memberLinks = graph.links.memberOf;
   var alumLinks = graph.links.alumOf;
@@ -142,8 +145,7 @@ d3.json("rhizome-json.php", function(error, graph) {
   svg.call(zoom);
   
   // manually zoom so we can see the whole graph
-  zoom.scaleTo(g, 0.1);
-  zoom.translateTo(g, 2500, 2500);
+resetZoomWholeGraph();
 
  function ticked() {
 
@@ -217,8 +219,8 @@ function idNodeOpacity(id, fill_opacity = 1) {
 }
 
 function resetZoomWholeGraph() {
-  zoom.scaleTo(g, 0.1);
-  zoom.translateTo(g, width/2, height/2);
+  zoom.scaleTo(svg, 0.1);
+  zoom.translateTo(svg, width/2, height/2);
 }
 
 function highlightNode(target_id) {
@@ -229,8 +231,8 @@ function highlightNode(target_id) {
     .each(function(d){
       if(d.id == target_id) {
         // zoom to this node
-        zoom.scaleTo(g, 1.5);
-        zoom.translateTo(g, d.x, d.y);
+        zoom.scaleTo(svg, 1.5);
+        zoom.translateTo(svg, d.x, d.y);
       }
     })
 
