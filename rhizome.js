@@ -67,9 +67,12 @@ var zoom =
     g.attr("transform", "translate(" + d3.event.transform.x + "," +
           d3.event.transform.y + ")scale(" + d3.event.transform.k + ")");
   });
-
+if (dataQuery){
 var jsonPull = "rhizome-json.php?"+dataQuery;
-
+}
+else {
+var jsonPull = "rhizome-json.php";
+}
 d3.json(jsonPull, function(error, graph) {
   if (error) throw error;
   var memberLinks = graph.links.memberOf;
