@@ -186,6 +186,9 @@ function dragstarted(d) {
   if (!d3.event.active) simulation.alphaTarget(0.3).restart();
   d.fx = d.x;
   d.fy = d.y;
+
+  // don't zoom to node as it will cause the graph to jump around
+  highlightNode(d.id, false);
 }
 
 function dragged(d) {
@@ -226,18 +229,20 @@ function resetZoomWholeGraph() {
   zoom.translateTo(svg, width/2, height/2);
 }
 
-function highlightNode(target_id) {
+function highlightNode(target_id, zoomToNode = true) {
   // make all nodes nearly transparent
   allNodesOpacity(0.2);
 
-  d3.selectAll('g.node')
-    .each(function(d){
-      if(d.id == target_id) {
-        // zoom to this node
-        zoom.scaleTo(svg, 1.5);
-        zoom.translateTo(svg, d.x, d.y);
-      }
-    })
+  if (zoomToNode) {
+    d3.selectAll('g.node')
+      .each(function(d){
+        if(d.id == target_id) {
+          // zoom to this node
+          zoom.scaleTo(svg, 1.5);
+          zoom.translateTo(svg, d.x, d.y);
+        }
+      });
+  }
 
   var second_degree_nodes = [];
 
