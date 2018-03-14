@@ -67,6 +67,10 @@ var zoom =
     g.attr("transform", "translate(" + d3.event.transform.x + "," +
           d3.event.transform.y + ")scale(" + d3.event.transform.k + ")");
   });
+
+var link_colour_default = '#999';
+var link_colour_highlight = 'red';
+
 if (dataQuery){
 var jsonPull = "rhizome-json.php?"+dataQuery;
 }
@@ -86,9 +90,11 @@ d3.json(jsonPull, function(error, graph) {
     .data(links)
     .enter().append("line")
       .attr("stroke-width", function(d) { return Math.sqrt(d.value); })
+      .style('stroke', link_colour_default)
       .style("stroke-dasharray", function(d) {
         if(d.type=="alum") return ("3, 3");
-      });
+      })
+      .attr('id', function(d){ return 'link-'+d.source+'-'+d.target; });
 
   node = g.append("g")
       .attr("class", "nodes")
@@ -221,6 +227,14 @@ function idNodeOpacity(id, fill_opacity = 1) {
   d3.selectAll('#text-'+id).style('fill-opacity', fill_opacity);
 }
 
+function allLinksColor(color = link_colour_default) {
+  d3.selectAll('line').style('stroke', color);
+}
+
+function idLinkColor(id, color = link_colour_highlight) {
+  d3.selectAll("#link-"+id).style('stroke', color);
+}
+
 function resetZoomWholeGraph() {
   zoom.scaleTo(svg, 0.1);
   zoom.translateTo(svg, width/2, height/2);
@@ -229,6 +243,7 @@ function resetZoomWholeGraph() {
 function highlightNode(target_id) {
   // make all nodes nearly transparent
   allNodesOpacity(0.2);
+  allLinksColor();
 
   d3.selectAll('g.node')
     .each(function(d){
@@ -252,15 +267,16 @@ function highlightNode(target_id) {
     }
     idNodeOpacity(d.source.id);
     idNodeOpacity(d.target.id);
+    idLinkColor(d.source.id+"-"+d.target.id);
   });
 
   second_degree_nodes.forEach(function(n){
-    console.log('node',n);
     links.filter(function(d) {
       return ((d.source.id == n) || (d.target.id == n));
     }).forEach(function(d){
       idNodeOpacity(d.source.id);
       idNodeOpacity(d.target.id);
+      idLinkColor(d.source.id+"-"+d.target.id);
     });
   });
 }
