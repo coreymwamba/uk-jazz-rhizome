@@ -2,7 +2,7 @@
 name: info-submission
 about: This form allows a user to input information for EXISTING entries in the RHIZOME
 title: ''
-labels: ''
+labels: 'info-edit'
 assignees: ''
 
 ---
